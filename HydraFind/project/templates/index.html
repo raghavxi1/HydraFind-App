@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HydraFind - Free Resource Locator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <h1>HydraFind</h1>
+                </div>
+                <nav class="nav">
+                    <button class="nav-btn" onclick="showAbout()">
+                        <i class="fas fa-info-circle"></i>
+                        About
+                    </button>
+                    <button class="nav-btn" onclick="showStats()">
+                        <i class="fas fa-chart-bar"></i>
+                        Stats
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="container">
+                <!-- Search Bar -->
+                <div class="search-section">
+                    <div class="search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Search for resources near you...">
+                        <button id="searchBtn" class="search-btn">Search</button>
+                    </div>
+                </div>
+
+                <!-- Filter Toggles -->
+                <div class="filter-section">
+                    <h3>Show Resources:</h3>
+                    <div class="filter-toggles">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="waterToggle" checked>
+                            <span class="slider"></span>
+                            <span class="toggle-label">
+                                <i class="fas fa-tint"></i>
+                                Water Sources
+                            </span>
+                        </label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="washroomToggle" checked>
+                            <span class="slider"></span>
+                            <span class="toggle-label">
+                                <i class="fas fa-restroom"></i>
+                                Washrooms
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button id="locateBtn" class="btn btn-primary">
+                        <i class="fas fa-crosshairs"></i>
+                        Find My Location
+                    </button>
+                    <button id="addResourceBtn" class="btn btn-secondary">
+                        <i class="fas fa-plus"></i>
+                        Add Resource
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Container -->
+        <div class="map-container">
+            <div id="map"></div>
+            <div class="map-legend">
+                <h4>Legend</h4>
+                <div class="legend-item">
+                    <span class="legend-icon water">💧</span>
+                    <span>Water Source</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-icon washroom">🚻</span>
+                    <span>Washroom</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-icon verified">✅</span>
+                    <span>Verified</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resource List -->
+        <div class="resource-list-container">
+            <div class="container">
+                <h3>Nearby Resources</h3>
+                <div id="resourceList" class="resource-list">
+                    <!-- Resources will be populated here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Resource Modal -->
+    <div id="addResourceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Resource</h3>
+                <button class="close-btn" onclick="closeModal('addResourceModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="addResourceForm" class="modal-body">
+                <div class="form-group">
+                    <label for="resourceName">Resource Name *</label>
+                    <input type="text" id="resourceName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="resourceType">Resource Type *</label>
+                    <select id="resourceType" required>
+                        <option value="">Select type...</option>
+                        <option value="water">Water Source</option>
+                        <option value="washroom">Washroom</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="resourceDescription">Description</label>
+                    <textarea id="resourceDescription" rows="3" placeholder="Describe the resource (accessibility, hours, etc.)"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="resourceAddress">Address</label>
+                    <input type="text" id="resourceAddress" placeholder="Street address or landmark">
+                </div>
+                
+                <div class="form-group">
+                    <label for="submitterName">Your Name (Optional)</label>
+                    <input type="text" id="submitterName" placeholder="Anonymous">
+                </div>
+                
+                <div class="form-group">
+                    <label>Location *</label>
+                    <div class="location-input">
+                        <input type="number" id="resourceLat" placeholder="Latitude" step="any" required>
+                        <input type="number" id="resourceLng" placeholder="Longitude" step="any" required>
+                        <button type="button" id="useCurrentLocation" class="btn btn-small">
+                            <i class="fas fa-crosshairs"></i>
+                            Use Current
+                        </button>
+                    </div>
+                    <small>Click on the map to set location or use current location</small>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('addResourceModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Resource</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resource Detail Modal -->
+    <div id="resourceDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="resourceDetailTitle">Resource Details</h3>
+                <button class="close-btn" onclick="closeModal('resourceDetailModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="resourceDetailContent">
+                <!-- Resource details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- About Modal -->
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>About HydraFind</h3>
+                <button class="close-btn" onclick="closeModal('aboutModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>HydraFind is a community-driven platform that helps you locate free water sources and public washrooms in your area.</p>
+                <h4>Features:</h4>
+                <ul>
+                    <li>Interactive map with real-time location</li>
+                    <li>Community-submitted resources</li>
+                    <li>Rating and review system</li>
+                    <li>Search and filter functionality</li>
+                    <li>Mobile-friendly design</li>
+                </ul>
+                <h4>How to Use:</h4>
+                <ol>
+                    <li>Allow location access for best results</li>
+                    <li>Use toggles to filter resource types</li>
+                    <li>Click on map markers for details</li>
+                    <li>Add new resources to help the community</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div id="statsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Platform Statistics</h3>
+                <button class="close-btn" onclick="closeModal('statsModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="statsContent">
+                <!-- Stats will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Loading resources...</p>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
