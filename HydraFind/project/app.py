@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-here'
+app.config['SECRET_KEY'] = 'AIzaSyBUvDkyPCvT4vLrMj67xsSeHJeiDORE8sw'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///hydrafind.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
